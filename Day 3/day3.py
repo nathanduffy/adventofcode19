@@ -23,6 +23,8 @@ def main():
     for wire in all_wires:
         x = 0
         y = 0
+        totalSteps = 0
+
         for instruction in wire:
             direction = instruction[0]
             amount = int(instruction[1:])
@@ -42,22 +44,23 @@ def main():
                 elif direction == "D":
                     y-=1
                 
-                if ((x, y) in fullGrid):
-                    if(fullGrid[(x, y)] != wireNumber):
-                        intersectionPoints.append((x, y))
-                else:
-                    fullGrid[(x, y)] = wireNumber
+                totalSteps+=1
                 counter += 1
+
+                if ((x, y) in fullGrid):
+                    if(fullGrid[(x, y)][0] != wireNumber):
+                        intersectionPoints.append((x, y, wireNumber, totalSteps+fullGrid[(x,y)][1]))
+                else:
+                    fullGrid[(x, y)] = (wireNumber, totalSteps)
+                
         wireNumber += 1
-    #logging.info("These are all of the intersection points: {}".format(intersectionPoints))
+    logging.info("These are all of the intersection points: {}".format(intersectionPoints))
 
-    finalResult = functools.reduce(lambda a, b : a if abs(a[0])+abs(a[1]) < abs(b[0])+abs(b[1]) else b, intersectionPoints)
-    logging.info("This is the minimum distance: {}".format(abs(finalResult[0]) + abs(finalResult[1])))
+    finalResultPart1 = functools.reduce(lambda a, b : a if abs(a[0])+abs(a[1]) < abs(b[0])+abs(b[1]) else b, intersectionPoints)
+    logging.info("This is the minimum distance based on location: {}".format(finalResultPart1))
 
-
-def populate_grid(direction, number, wireGrid):
-    exit
-
+    finalResultPart2 = functools.reduce(lambda a, b : a if a[3] < b[3] else b, intersectionPoints)
+    logging.info("This is the minimum distance based on steps: {}".format(finalResultPart2))
 
 
 if __name__ == "__main__":
