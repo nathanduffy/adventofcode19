@@ -3,7 +3,7 @@ import sys
 from itertools import permutations
 
 LOGGING_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-input_program = "3,8,1001,8,10,8,105,1,0,0,21,38,47,64,89,110,191,272,353,434,99999,3,9,101,4,9,9,102,3,9,9,101,5,9,9,4,9,99,3,9,1002,9,5,9,4,9,99,3,9,101,2,9,9,102,5,9,9,1001,9,5,9,4,9,99,3,9,1001,9,5,9,102,4,9,9,1001,9,5,9,1002,9,2,9,1001,9,3,9,4,9,99,3,9,102,2,9,9,101,4,9,9,1002,9,4,9,1001,9,4,9,4,9,99,3,9,101,1,9,9,4,9,3,9,101,1,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,2,9,9,4,9,99,3,9,101,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,99,3,9,1001,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,101,1,9,9,4,9,99,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,99,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,99"
+input_program = "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99"
 
 class operation:
     def __init__(self, input=[]):
@@ -18,13 +18,15 @@ class operation:
         self.parameter_mode = list(reversed(list(map(int, list(instruction[0:3])))))
     def __str__(self):
         return str(self.__dict__)
-    def getParm(self, loc, program):
+    def getParm(self, loc, program, relative_base):
         #logging.info("Get parms for {} at location {}".format(self, loc))
         if self.parameter_mode[loc] == 0:
             #logging.info("returned {}".format(program[self.parameters[loc]]))
             return program[self.parameters[loc]]
         elif self.parameter_mode[loc] == 1:
             return self.parameters[loc]
+        elif self.parameter_mode[loc] == 2:
+            return program[self.parameters[loc] + relative_base]
 
 def main():
     OG_opcode = list(map(int, input_program.split(',')))
@@ -35,11 +37,12 @@ def main():
     logging.info('Started the opcode program on an input of length {}'.format(len(OG_opcode)))
 
     #part1(OG_opcode)
+    print(iterate_program(OG_opcode, []))
 
-    iterate_program()
+
 
 def iterate_program(opcode_local, input_list):
-    counter = input_loc = final_ouput = 0
+    counter = input_loc = final_ouput = relative_base = 0
     opcode = opcode_local.copy()
     
     while(counter<=len(opcode)):
@@ -48,17 +51,17 @@ def iterate_program(opcode_local, input_list):
         output = 0
         
         operation_object = operation(opcode[counter:counter+(inputs+1)])
-        #logging.info("This is the object {}".format(operation_object))
+        logging.info("This is the object {}".format(operation_object))
 
         if(opcode[counter] == 99):
             #logging.info('Final State was {}'.format(opcode[0]))
             return int(final_ouput)
         elif(operation_object.opcode == 1):
             #1 means addition
-            output = operation_object.getParm(0, opcode) + operation_object.getParm(1, opcode)
+            output = operation_object.getParm(0, opcode, relative_base) + operation_object.getParm(1, opcode, relative_base)
         elif(operation_object.opcode == 2):
             #2 means multiplication
-            output = operation_object.getParm(0, opcode) * operation_object.getParm(1, opcode)
+            output = operation_object.getParm(0, opcode, relative_base) * operation_object.getParm(1, opcode, relative_base)
         elif operation_object.opcode == 3:
             #take input and save it to the parameter
             output = input_list[input_loc]
@@ -67,26 +70,29 @@ def iterate_program(opcode_local, input_list):
             counter+=inputs+1
             continue
         elif(operation_object.opcode == 4):
-            final_ouput = operation_object.getParm(0, opcode)
+            final_ouput = operation_object.getParm(0, opcode, relative_base)
             counter+=inputs+1
             continue
         elif(operation_object.opcode == 5):
             # Jump if True
             if operation_object.getParm(0, opcode):
-                counter = operation_object.getParm(1, opcode)
+                counter = operation_object.getParm(1, opcode, relative_base)
                 continue
         elif(operation_object.opcode == 6):
             # Jump if False
-            if not operation_object.getParm(0, opcode):
+            if not operation_object.getParm(0, opcode, relative_base):
                 counter = operation_object.getParm(1,opcode)
                 continue
         elif(operation_object.opcode == 7):
             # Less than
-            output = 1 if operation_object.getParm(0,opcode) < operation_object.getParm(1,opcode) else 0
+            output = 1 if operation_object.getParm(0,opcode, relative_base) < operation_object.getParm(1,opcode, relative_base) else 0
         elif(operation_object.opcode == 8):
             # Equals
-            output = 1 if operation_object.getParm(0,opcode) == operation_object.getParm(1,opcode) else 0
-        
+            output = 1 if operation_object.getParm(0,opcode, relative_base) == operation_object.getParm(1,opcode, relative_base) else 0
+        elif(operation_object.opcode == 9):
+            relative_base += operation_object.parameters[0]
+            counter+=inputs+1
+            continue
         opcode[operation_object.parameters[2]] = output
         counter+=inputs+1
         #logging.info("Current State of the program is {}".format(opcode))
@@ -100,7 +106,7 @@ def number_of_paramaters(opcode):
         return 3
     elif opcode == 5 or opcode == 6:
         return 2
-    elif opcode == 3 or opcode == 4:
+    elif opcode == 3 or opcode == 4 or opcode == 9:
         return 1
     else:
         return 0

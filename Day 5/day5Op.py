@@ -98,11 +98,6 @@ def execute_operation(operation, program):
         # Equals
         output = 1 if operation.getParm(0,program) == operation.getParm(1,program) else 0
     if(operation.opcode == 4):
-        #Output the value of its parameter
-        #if operation.parameter_mode[0] == 1:
-        #    print_comp = operation.getParm(3,)
-        #else:
-        #    print_comp = program[operation.output_loc]
         print_comp = operation.getParm(0, program)
         print("This was the output of the program {}".format(print_comp))
     elif operation.opcode == 3:
